@@ -1,0 +1,113 @@
+dim 140 110
+area 0 0 140 110
+background 240 240 255
+
+point A 20 20
+point B 120 20
+point C 70 95
+
+number N 5
+
+procedure sierpinski {A B C level}
+{
+    if_then_else { level == 0 }
+    {
+        drawsegment A B
+        drawsegment B C
+        drawsegment C A
+    }
+    {
+        midpoint midAB A B
+        midpoint midBC B C
+        midpoint midCA C A
+
+        expression next_level { level - 1 }
+
+        call sierpinski { A midAB midCA next_level }
+        call sierpinski { midAB B midBC next_level }
+        call sierpinski { midCA midBC C next_level }
+    }
+}
+
+procedure steiner_chain {N O R}
+{
+    expression pi { 3.14159265358979323846 }
+    expression k { sin( pi / N ) }
+
+    expression r { R * (1 - k) / (1 + k) }
+    expression d { (R + r) / 2 }
+    expression s { (R - r) / 2 }
+
+    getx Ox O
+    gety Oy O
+
+    expression P2x { Ox + R }
+    point outer_point P2x Oy
+    circle outer_circle O outer_point
+    drawcircle outer_circle
+
+    expression P1x { Ox + r }
+    point inner_point P1x Oy
+    circle inner_circle O inner_point
+    drawcircle inner_circle
+
+    expression Edx { Ox + d }
+    point E Edx Oy
+
+    number i 0
+    while { i < N }
+    {
+        expression ang { i * 360.0 / N }
+        rotate C O ang E
+
+        getx Cx C
+        gety Cy C
+
+        expression Px { Cx + s }
+        point P Px Cy
+
+        circle small_circle C P
+%       drawcircle small_circle
+
+        point T 0 0 360 0
+        getx ang2 T 
+
+        rotate C_rot O ang2 C
+        rotate P_rot O ang2 P
+
+        circle small_circle2 C_rot P_rot
+        drawcircle small_circle2
+
+        expression i { i + 1 }
+    }
+}
+
+procedure triangle_incenter {A B C O R}
+{
+    midpoint midAB A B
+    midpoint midBC B C
+    midpoint midCA C A
+
+    bis bis1 midCA midAB midBC
+    bis bis2 midAB midBC midCA
+
+    intersec O bis1 bis2
+
+    line B1C1 midBC midCA
+    foot F O B1C1
+
+    distance R O F
+}
+
+procedure sierpinski_steiner {A B C N}
+{
+        call sierpinski {A B C N}
+
+        call triangle_incenter {A B C O R}        
+        expression n {3*N}
+        call steiner_chain {n O R}
+}
+
+call sierpinski_steiner {A B C N}
+
+animation_frames 200 20
